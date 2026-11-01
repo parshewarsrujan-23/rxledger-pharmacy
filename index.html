@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RxLedger – Pharmacy Stock Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef4f1;--surface:#fff;--ink:#0d2b26;--mut:#5b7a73;--line:#d6e4df;--brand:#0b7a63;--brand2:#0a5c4b;--tint:#e1f2ec;--ok:#1b9a6c;--warn:#c9830a;--warnbg:#fdf1d8;--bad:#c8372d;--badbg:#fbe4e1;--rx:#6b4fbb;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a1b18;--surface:#112723;--ink:#e3f2ee;--mut:#8fb0a8;--line:#1f3b35;--brand:#2fc29b;--brand2:#7fe0c4;--tint:#15342d;--warnbg:#3a2d0c;--badbg:#3d1b18;--rx:#a995ee;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0a1b18;--surface:#112723;--ink:#e3f2ee;--mut:#8fb0a8;--line:#1f3b35;--brand:#2fc29b;--brand2:#7fe0c4;--tint:#15342d;--warnbg:#3a2d0c;--badbg:#3d1b18;--rx:#a995ee;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'Hanken Grotesk',system-ui,sans-serif}
+h1,h2,h3,.big{font-family:'Bricolage Grotesque','Hanken Grotesk',sans-serif;margin:0}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.top{background:var(--brand2);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--brand2);z-index:6}
+.logo{display:flex;align-items:center;gap:10px}
+.logo svg{width:34px;height:34px}
+.logo b{font:800 21px 'Bricolage Grotesque';letter-spacing:-.3px}
+.logo small{display:block;font-size:12px;opacity:.75;margin-top:-3px}
+.top .sp{flex:1}
+.btn{border:0;border-radius:10px;padding:9px 16px;font-weight:600;background:var(--brand);color:#fff}
+.top .btn{background:#fff;color:var(--brand2)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.top .btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.4)}
+.btn.bad{background:var(--badbg);color:var(--bad)}
+main{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;border-left:5px solid var(--brand)}
+.kpi.w{border-left-color:var(--warn)}.kpi.b{border-left-color:var(--bad)}.kpi.r{border-left-color:var(--rx)}
+.kpi span{color:var(--mut);font-size:13px}
+.kpi .big{font-size:30px;font-weight:700;display:block;line-height:1.2;margin-top:2px}
+.grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-top:16px}
+@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h2{font-size:19px;margin-bottom:4px}
+.card>p{margin:0 0 12px;color:var(--mut);font-size:13px}
+.ai{border-top:4px solid var(--rx)}
+.ai-row,.al-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px dashed var(--line);cursor:pointer}
+.ai-row:first-of-type,.al-row:first-of-type{border-top:0}
+.ai-row .n{flex:1;min-width:0}.ai-row b,.al-row b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai-row small,.al-row small{color:var(--mut)}
+.pill{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.p-ok{background:var(--tint);color:var(--ok)}.p-warn{background:var(--warnbg);color:var(--warn)}.p-bad{background:var(--badbg);color:var(--bad)}.p-rx{background:var(--tint);color:var(--rx)}
+.bar{height:7px;border-radius:9px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:9px;background:var(--ok)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 12px;align-items:center}
+.tools input,.tools select,.f input,.f select{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:9px 12px;min-width:0}
+.tools input{flex:1;min-width:180px}
+.tw{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th{text-align:left;font-size:12.5px;color:var(--mut);font-weight:600;padding:12px 14px;background:var(--tint);white-space:nowrap}
+td{padding:12px 14px;border-top:1px solid var(--line);vertical-align:middle}
+tr.row{cursor:pointer}tr.row:hover td{background:var(--tint)}
+td .nm{font-weight:700;color:var(--brand2);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+td small{display:block;color:var(--mut)}
+.rxb{display:inline-block;font-size:11px;font-weight:700;color:var(--rx);border:1px solid var(--rx);border-radius:5px;padding:0 5px;margin-left:6px}
+.scrim{position:fixed;inset:0;background:rgba(5,25,20,.5);z-index:20;display:none}
+.scrim.on{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(470px,100%);background:var(--surface);z-index:21;transform:translateX(105%);transition:transform .25s;overflow-y:auto;padding:22px 22px calc(30px + env(safe-area-inset-bottom,0px));padding-top:calc(22px + env(safe-area-inset-top,0px))}
+.drawer.on{transform:none}
+.drawer h2{font-size:24px;padding-right:40px}
+.x{position:absolute;right:16px;top:calc(16px + env(safe-area-inset-top,0px));width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px}
+.stock{display:flex;align-items:flex-end;gap:12px;margin:14px 0 8px}
+.stock .big{font-size:52px;font-weight:800;line-height:1;color:var(--brand2)}
+.sell{background:var(--tint);border-radius:14px;padding:16px;margin:16px 0;border:1px solid var(--line)}
+.sell h3{font-size:17px;margin-bottom:8px}
+.qrow{display:flex;gap:8px;align-items:stretch}
+.qrow input{flex:1;min-width:0;font:700 24px 'Bricolage Grotesque';text-align:center;border:2px solid var(--brand);border-radius:10px;background:var(--surface);color:var(--ink);padding:8px}
+.qrow .btn{padding:0 18px}
+.chips{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--brand);background:var(--surface);color:var(--brand2);border-radius:99px;padding:4px 14px;font-weight:600}
+.sub{color:var(--mut);font-size:13px;margin-top:6px}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.mini div{border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.mini span{font-size:12px;color:var(--mut);display:block}
+.hist div{display:flex;justify-content:space-between;padding:7px 0;border-top:1px dashed var(--line);font-size:14px}
+.modal{position:fixed;inset:0;z-index:30;display:none;place-items:center;padding:16px;background:rgba(5,25,20,.55)}
+.modal.on{display:grid}
+.mbox{background:var(--surface);border-radius:16px;padding:22px;width:min(520px,100%);max-height:92vh;overflow:auto}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.f label{font-size:13px;color:var(--mut);display:flex;flex-direction:column;gap:4px}
+.f .full{grid-column:1/-1}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,40px);background:var(--brand2);color:#fff;padding:11px 20px;border-radius:12px;z-index:40;opacity:0;transition:.25s;pointer-events:none;max-width:92vw}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:var(--bad)}
+body{background:radial-gradient(900px 500px at 8% -5%,rgba(47,194,155,.22),transparent 60%),radial-gradient(800px 500px at 100% 0,rgba(217,184,108,.16),transparent 55%),var(--bg);background-attachment:fixed}
+.top{background:linear-gradient(120deg,#06382f,#0b6b57 60%,#0f8a70);box-shadow:0 8px 30px -12px rgba(6,56,47,.6)}
+body::before{background:#06382f}
+.logo svg{width:44px;height:44px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.3))}
+.logo b{font-size:24px;letter-spacing:-.5px}.logo b i{font-style:normal;font-weight:500;color:#9ff0d8}
+.btn{transition:transform .15s,box-shadow .2s;box-shadow:0 6px 16px -8px rgba(11,122,99,.7)}.btn:hover{transform:translateY(-1px)}.btn:active{transform:scale(.97)}.top .btn{box-shadow:none}
+.hero{position:relative;overflow:hidden;border-radius:24px;padding:30px 32px;color:#fff;background:linear-gradient(130deg,#06382f 0%,#0b7a63 55%,#1aa384 100%);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:flex-end;box-shadow:0 24px 50px -24px rgba(6,56,47,.7);margin-bottom:18px}
+.hero h1{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.8px;position:relative}
+.hero p{margin:6px 0 0;opacity:.88;position:relative;max-width:520px}
+.hero .hr{text-align:right;position:relative}
+.clock{font:700 40px 'Bricolage Grotesque';font-variant-numeric:tabular-nums;line-height:1}.date{opacity:.8;font-size:14px;margin-top:4px}
+.blob{position:absolute;border-radius:50%;filter:blur(40px);opacity:.5;animation:drift 14s ease-in-out infinite alternate}
+.b1{width:260px;height:260px;background:#5eead4;right:-60px;top:-90px}.b2{width:220px;height:220px;background:#d9b86c;left:30%;bottom:-130px;opacity:.3;animation-delay:-6s}
+@keyframes drift{to{transform:translate(-40px,30px) scale(1.15)}}
+.ecg{position:absolute;left:0;right:0;bottom:0;width:100%;height:60px;opacity:.3}
+.ecg path{fill:none;stroke:#fff;stroke-width:2;stroke-dasharray:700;stroke-dashoffset:700;animation:ecg 4s linear infinite}
+@keyframes ecg{to{stroke-dashoffset:-700}}
+.kpi,.mc,.card{position:relative;overflow:hidden;border-radius:20px;box-shadow:0 12px 30px -18px rgba(8,60,48,.35)}
+.card{padding:20px}
+.kpi,.kpi.w,.kpi.b,.kpi.r{border-left:1px solid var(--line);padding:18px 20px;transition:transform .25s}
+.kpi:hover{transform:translateY(-4px)}
+.kpi::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--brand)}.kpi.w::before{background:var(--warn)}.kpi.b::before{background:var(--bad)}.kpi.r::before{background:var(--rx)}
+.kpi .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--tint);color:var(--brand);margin-bottom:10px}.kpi .ic svg{width:21px;height:21px}
+.kpi.w .ic{background:var(--warnbg);color:var(--warn)}.kpi.b .ic{background:var(--badbg);color:var(--bad)}.kpi.r .ic{color:var(--rx)}
+.kpi .big{font-size:34px;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.kpi::after,.mc::after,.card::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(260px circle at var(--mx,50%) var(--my,0),rgba(47,194,155,.16),transparent 60%);opacity:0;transition:opacity .25s;pointer-events:none}
+.kpi:hover::after,.mc:hover::after,.card:hover::after{opacity:1}
+.ai{border-top:1px solid var(--line)}.ai::before{content:"";position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,var(--rx),var(--brand))}
+.ai-row,.al-row{transition:background .2s}.ai-row:hover,.al-row:hover{background:var(--tint);margin:0 -10px;padding-left:10px;padding-right:10px;border-radius:10px}
+.tw{border-radius:20px;box-shadow:0 12px 30px -18px rgba(8,60,48,.35)}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{border:0;background:transparent;color:var(--mut);padding:7px 16px;border-radius:9px;font-weight:600;transition:.2s}.seg button.on{background:var(--brand);color:#fff}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.mc{--c:var(--ok);background:var(--surface);border:1px solid var(--line);padding:18px 18px 16px 22px;cursor:pointer;transform:perspective(900px) rotateX(var(--ry,0deg)) rotateY(var(--rx,0deg));transition:transform .2s,box-shadow .25s,border-color .25s}
+.mc.l-warn{--c:var(--warn)}.mc.l-bad{--c:var(--bad)}
+.mc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
+.mc:hover{box-shadow:0 24px 44px -22px rgba(8,60,48,.55);border-color:var(--c)}
+.mc.in{animation:rise .55s backwards}@keyframes rise{from{opacity:0;transform:translateY(20px)}}
+.mc h3{font-size:18px;line-height:1.25;margin:10px 0 2px}.mc small{color:var(--mut)}
+.mc-top{display:flex;gap:6px;align-items:center}
+.form{font-size:12px;font-weight:600;color:var(--brand2);background:var(--tint);border-radius:7px;padding:2px 8px}
+.mc-mid{display:flex;align-items:center;gap:12px;margin:14px 0}
+.ring{width:62px;height:62px;flex:none}.ring circle{fill:none;stroke-width:6;stroke-linecap:round}.ring .t{stroke:var(--line)}.ring .v{stroke:var(--c);transition:stroke-dashoffset .8s}
+.mc-mid b{font:800 26px 'Bricolage Grotesque';display:block;line-height:1}.sp2{margin-left:auto;width:84px;height:36px}
+.mc-foot{display:flex;justify-content:space-between;align-items:center}
+.sellb{border:0;background:var(--brand2);color:#fff;border-radius:10px;padding:7px 18px;font-weight:700;transition:transform .15s,background .2s}.sellb:hover{background:var(--brand);transform:scale(1.06)}
+.scrim{backdrop-filter:blur(4px)}
+.drawer{border-radius:24px 0 0 24px;box-shadow:-30px 0 60px -20px rgba(0,0,0,.4);transition:transform .35s cubic-bezier(.2,.9,.3,1)}
+.stock .big{background:linear-gradient(135deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.bump{animation:bump .45s}@keyframes bump{40%{transform:scale(1.25)}}
+.sell{background:linear-gradient(140deg,var(--tint),var(--surface));border-radius:18px}
+.mlg{display:grid;grid-template-columns:1.3fr 1fr;gap:22px;margin-top:6px}@media(max-width:860px){.mlg{grid-template-columns:1fr}}
+.mlt{width:100%;min-width:0;font-size:14px}.mlt th,.mlt td{padding:8px 10px}.mlt tr.best td{background:var(--tint);font-weight:700}
+.fi{display:grid;grid-template-columns:96px 1fr 42px;gap:8px;align-items:center;font-size:13px;margin:6px 0}
+@media(max-width:600px){.hero{padding:22px}.hero .hr{text-align:left}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ef0d6"/><stop offset="1" stop-color="#0b9a7c"/></linearGradient></defs><rect width="48" height="48" rx="14" fill="url(#lg)"/><g transform="rotate(-40 24 25)"><rect x="8" y="17" width="32" height="16" rx="8" fill="#fff"/><path d="M24 17h8a8 8 0 010 16h-8z" fill="#064c3e"/></g><circle cx="37" cy="11" r="8" fill="#e8c76f"/><path d="M37 7v8M33 11h8" stroke="#064c3e" stroke-width="2.4" stroke-linecap="round"/></svg>
+    <div><b>Rx<i>Ledger</i></b><small>Pharmacy stock &amp; sales</small></div>
+  </div>
+  <div class="sp"></div>
+  <button class="btn ghost" id="theme">Theme</button>
+  <button class="btn ghost" id="export">Export CSV</button>
+  <button class="btn" id="add">+ Add medicine</button>
+</header>
+
+<main>
+  <section class="hero"><div class="blob b1"></div><div class="blob b2"></div><svg class="ecg" viewBox="0 0 600 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 32h190l14-22 20 46 18-42 12 18h346"/></svg><div><h1 id="greet">Welcome, Pharmacist</h1><p id="hsub"></p></div><div class="hr"><div class="clock" id="clock"></div><div class="date" id="date"></div></div></section>
+  <section class="kpis" id="kpis"></section>
+  <section class="grid2">
+    <div class="card ai">
+      <h2>AI restock forecast</h2>
+      <p>Predicted by a machine-learning model trained on two years of sales, season and weather data. Tap a row to open it.</p>
+      <div id="ai"></div>
+    </div>
+    <div class="card">
+      <h2>Needs attention</h2>
+      <p>Low stock, near-expiry and expired batches.</p>
+      <div id="alerts"></div>
+    </div>
+  </section>
+
+  <section class="card" id="mlcard" style="margin-top:16px"></section>
+  <div class="tools"><div class="seg"><button data-v="cards" class="on">Cards</button><button data-v="table">Table</button></div>
+    <input id="q" type="search" placeholder="Search medicine, category or batch…" aria-label="Search">
+    <select id="cat" aria-label="Category"></select>
+    <select id="sort" aria-label="Sort">
+      <option value="name">Sort: Name</option><option value="days">Sort: Days left</option><option value="stock">Sort: Stock</option><option value="exp">Sort: Expiry</option>
+    </select>
+  </div>
+  <div id="cards" class="mgrid"></div>
+  <div class="tw"><table>
+    <thead><tr><th>Medicine</th><th>Category</th><th>In stock</th><th>Price</th><th>Expiry</th><th>Sold today</th><th>Days left (AI)</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Medicine details"></aside>
+
+<div class="modal" id="modal"><div class="mbox">
+  <h2>Add medicine</h2>
+  <div class="f">
+    <label class="full">Medicine name<input id="n_name" placeholder="e.g. Amoxicillin 500mg"></label>
+    <label>Category<select id="n_cat"></select></label>
+    <label>Form<select id="n_form"><option>Tablet</option><option>Capsule</option><option>Syrup</option><option>Injection</option><option>Ointment</option><option>Drops</option></select></label>
+    <label>Quantity in stock<input id="n_stock" type="number" min="0" value="0"></label>
+    <label>Price per unit (₹)<input id="n_price" type="number" min="0" step="0.01" value="0"></label>
+    <label>Batch no.<input id="n_batch"></label>
+    <label>Expiry date<input id="n_exp" type="date"></label>
+    <label>Reorder level<input id="n_min" type="number" min="0" value="20"></label>
+    <label>Prescription only<select id="n_rx"><option value="0">No</option><option value="1">Yes</option></select></label>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn ghost" id="n_cancel">Cancel</button><button class="btn" id="n_save">Save medicine</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const ML={"generated":"2026-11-01","best":"Gradient Boosting","dataset":{"rows":8760,"medicines":12,"days":730,"train":7344,"test":1080,"split":"2026-08-04"},"models":[{"name":"Baseline (7-day average)","mae":1.927,"rmse":2.546,"r2":0.484,"wape":36.3},{"name":"Linear Regression","mae":1.857,"rmse":2.402,"r2":0.54,"wape":34.98},{"name":"Random Forest","mae":1.792,"rmse":2.343,"r2":0.563,"wape":33.76},{"name":"Gradient Boosting","mae":1.792,"rmse":2.324,"r2":0.57,"wape":33.76}],"importance":[{"f":"roll_28","v":0.732},{"f":"temp","v":0.046},{"f":"roll_7","v":0.038},{"f":"dow","v":0.037},{"f":"lag_14","v":0.026},{"f":"promo","v":0.026},{"f":"lag_1","v":0.025}],"curve":{"actual":[60.0,75.0,60.0,69.0,58.0,64.0,64.0,62.0,80.0,46.0,63.0,86.0,62.0,58.0,79.0,80.0,44.0,57.0,55.0,58.0,63.0,60.0,88.0,59.0,69.0,63.0,57.0,62.0,69.0,88.0,56.0,62.0,64.0,66.0,71.0,71.0,78.0,58.0,79.0,55.0,80.0,73.0,65.0,75.0,52.0],"pred":[68.0,68.4,48.7,65.9,64.6,67.8,65.9,71.3,71.6,52.3,65.4,77.2,71.1,66.3,69.4,73.3,50.1,71.0,67.5,63.2,63.7,71.1,71.6,50.3,63.9,67.6,68.4,65.6,71.5,72.0,65.0,67.8,65.4,64.3,65.6,71.9,74.8,53.2,68.0,66.9,64.4,70.4,71.0,69.3,50.4]},"meds":{"Paracetamol 650mg":{"actual30":[14,7,11,6,10,6,10,11,7,8,11,10,11,8,13,8,12,10,12,13,12,10,11,12,3,17,6,12,13,6],"forecast14":[10.3,9.9,9.8,10.0,11.1,11.2,8.9,10.4,10.2,10.2,10.3,10.8,11.1,8.1]},"Amoxicillin 500mg":{"actual30":[4,4,3,9,1,5,6,6,5,3,5,5,6,4,5,3,8,3,8,4,4,11,2,7,5,7,10,6,6,6],"forecast14":[5.8,5.7,5.8,5.7,5.7,6.1,4.4,5.5,5.3,5.4,5.5,5.5,5.7,4.3]},"Metformin 500mg":{"actual30":[20,7,8,6,14,8,13,19,6,15,9,9,12,8,16,9,8,8,8,14,11,10,6,10,9,7,9,7,9,8],"forecast14":[9.1,9.0,9.3,9.0,9.6,9.7,7.4,9.3,9.1,9.1,9.1,9.5,9.7,6.6]},"Azithromycin 500mg":{"actual30":[7,3,5,8,4,4,4,7,6,9,9,8,10,9,12,3,8,9,3,5,7,13,4,9,10,7,7,12,11,5],"forecast14":[7.4,7.5,7.1,7.1,7.8,8.3,6.0,8.8,8.8,7.9,7.9,8.1,7.8,5.3]},"Pantoprazole 40mg":{"actual30":[7,10,5,2,6,9,12,7,7,6,5,2,4,7,11,7,2,8,7,9,7,11,11,8,5,10,10,7,8,5],"forecast14":[6.9,7.0,7.1,7.0,7.3,7.4,5.1,6.9,6.8,6.9,7.1,7.3,7.5,5.3]},"Cetirizine 10mg":{"actual30":[6,4,6,5,4,7,3,9,3,5,2,2,5,6,6,7,8,6,3,4,4,3,6,5,3,8,5,5,2,5],"forecast14":[5.4,5.2,5.3,5.3,5.3,5.4,4.2,5.3,5.3,5.4,5.3,5.3,5.5,4.1]},"Amlodipine 5mg":{"actual30":[4,3,3,7,4,7,2,9,7,11,4,9,3,2,8,4,4,7,9,7,8,6,6,8,7,9,8,0,6,7],"forecast14":[6.0,6.3,6.3,6.2,6.2,6.8,5.0,6.4,6.0,6.0,6.0,6.1,6.7,4.8]},"Vitamin D3 60K":{"actual30":[6,1,4,3,1,6,4,6,4,6,2,4,3,10,8,3,6,2,6,5,7,5,4,8,3,5,5,7,8,3],"forecast14":[5.3,5.1,5.2,5.3,5.5,5.7,4.1,5.5,5.3,5.3,5.3,5.5,5.8,4.1]},"Cough Syrup 100ml":{"actual30":[0,1,0,2,1,4,2,0,1,2,2,0,2,0,0,2,2,0,2,1,2,1,2,1,0,2,2,3,1,1],"forecast14":[1.5,1.4,1.5,1.4,1.5,1.6,1.2,1.5,1.4,1.4,1.4,1.5,1.6,1.2]},"Ibuprofen 400mg":{"actual30":[5,1,4,4,6,7,4,8,9,2,10,7,5,9,7,6,3,6,5,3,8,6,3,4,9,4,9,4,9,3],"forecast14":[5.8,5.9,5.8,5.8,5.9,6.3,4.3,5.5,5.8,5.3,5.5,5.5,5.8,4.3]},"Insulin Glargine":{"actual30":[0,0,1,1,2,0,0,4,1,1,2,1,0,0,1,0,0,2,1,2,0,1,2,3,0,1,0,0,1,0],"forecast14":[0.8,0.7,0.7,0.7,0.8,0.9,0.6,0.8,0.7,0.7,0.7,0.8,0.9,0.6]},"ORS Sachet":{"actual30":[7,3,7,2,5,0,0,2,3,1,2,0,1,6,1,4,1,3,2,4,1,1,1,4,1,3,2,2,1,3],"forecast14":[2.2,2.0,2.0,2.0,2.1,2.2,1.8,2.0,2.0,2.0,2.1,2.1,2.2,1.8]}}};
+const CATS=['Antibiotic','Pain & Fever','Diabetes','Cardiac','Gastro','Allergy','Vitamins','Respiratory','Other'];
+const KEY='rxledger_v2';
+const $=s=>document.querySelector(s);
+const iso=d=>d.toISOString().slice(0,10);
+const today=()=>iso(new Date());
+const dAgo=n=>{const d=new Date();d.setDate(d.getDate()-n);return iso(d)};
+const inr=n=>'₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:0});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S=null,openId=null;
+
+function seed(){
+  const base=[
+    ['Paracetamol 650mg','Pain & Fever','Tablet',2.2,420,100,9,0],['Amoxicillin 500mg','Antibiotic','Capsule',9,90,40,4,1],
+    ['Metformin 500mg','Diabetes','Tablet',1.8,300,80,8,1],['Azithromycin 500mg','Antibiotic','Tablet',22,35,25,3,1],
+    ['Pantoprazole 40mg','Gastro','Tablet',6,150,50,6,0],['Cetirizine 10mg','Allergy','Tablet',1.5,60,50,7,0],
+    ['Amlodipine 5mg','Cardiac','Tablet',3,200,60,5,1],['Vitamin D3 60K','Vitamins','Capsule',24,18,15,2,0],
+    ['Cough Syrup 100ml','Respiratory','Syrup',85,26,12,1.2,0],['Ibuprofen 400mg','Pain & Fever','Tablet',2.6,240,60,5,0],
+    ['Insulin Glargine','Diabetes','Injection',640,12,6,.7,1],['ORS Sachet','Other','Tablet',18,70,30,3,0]];
+  const meds=base.map((b,i)=>{
+    const sales=[],A=ML.meds[b[0]].actual30;for(let k=29;k>=0;k--)sales.push({d:dAgo(k),q:A[29-k]});
+    const e=new Date();e.setDate(e.getDate()+(i==7?38:i==5?-6:200+i*40));
+    return{id:'m'+i,name:b[0],cat:b[1],form:b[2],price:b[3],stock:b[4],min:b[5],rate:b[6],rx:b[7],batch:'B'+(2400+i*7),exp:iso(e),sales,restocks:[]};
+  });
+  return{meds,log:[]};
+}
+function load(){try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}if(!S||!S.meds)S=seed()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function toast(m,err){const t=$('#toast');t.textContent=m;t.className='toast on'+(err?' err':'');clearTimeout(toast.h);toast.h=setTimeout(()=>t.className='toast',2600)}
+
+/* ---- AI forecast: weighted moving average + trend ---- */
+function daily(m,n){const map={};m.sales.forEach(s=>map[s.d]=(map[s.d]||0)+s.q);return Array.from({length:n},(_,i)=>map[dAgo(n-1-i)]||0)}
+function forecast(m){
+  const d=daily(m,14),a=d.slice(7),b=d.slice(0,7);
+  const sum=x=>x.reduce((p,c)=>p+c,0),r7=sum(a)/7,p7=sum(b)/7;
+  const avg=Math.max(.01,.65*r7+.35*p7);
+  const trend=p7>0?(r7-p7)/p7:0;
+  let proj=avg*(1+Math.max(-.3,Math.min(.5,trend))*.5);const ml=ML.meds[m.name];if(ml)proj=.7*(ml.forecast14.reduce((p,c)=>p+c,0)/14)+.3*proj;
+  const days=m.stock/proj;
+  const need=Math.max(0,Math.ceil(proj*21+m.min*.3-m.stock));
+  const lvl=days<7||m.stock<=m.min?'bad':days<14?'warn':'ok';
+  return{proj,days,need,trend,lvl,d};
+}
+function expInfo(m){const n=Math.round((new Date(m.exp)-new Date(today()))/864e5);return{n,lvl:n<0?'bad':n<=60?'warn':'ok'}}
+const soldToday=m=>m.sales.filter(s=>s.d==today()).reduce((p,c)=>p+c.q,0);
+const daysTxt=f=>f.days>99?'99+ days':Math.floor(f.days)+' days';
+
+function render(){
+  const M=S.meds.map(m=>({m,f:forecast(m),e:expInfo(m)}));
+  const val=S.meds.reduce((p,m)=>p+m.stock*m.price,0);
+  const low=M.filter(x=>x.m.stock<=x.m.min).length;
+  const exp=M.filter(x=>x.e.lvl!='ok').length;
+  const rev=S.meds.reduce((p,m)=>p+soldToday(m)*m.price,0);
+  const K=[['',ic('<path d="M4 7h16v12H4z"/><path d="M16 13h4M7 7V5h10v2"/>'),'Stock value',val,1],['r',ic('<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'),'Today’s sales',rev,1],['w',ic('<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>'),'Low-stock medicines',low,0],['b',ic('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),'Expiring or expired',exp,0]];
+  $('#kpis').innerHTML=K.map(k=>`<div class="kpi ${k[0]}"><i class="ic">${k[1]}</i><span>${k[2]}</span><b class="big" data-v="${k[3]}" data-p="${k[4]}">${k[4]?inr(k[3]):k[3]}</b></div>`).join('');
+  countUp();hero(S.meds.length,low,rev);
+  const ai=M.filter(x=>x.f.lvl!='ok').sort((a,b)=>a.f.days-b.f.days).slice(0,6);
+  $('#ai').innerHTML=ai.length?ai.map(x=>`<div class="ai-row" data-id="${x.m.id}"><div class="n"><b>${esc(x.m.name)}</b><small>Selling ~${x.f.proj.toFixed(1)}/day ${x.f.trend>.1?'· demand rising':x.f.trend<-.1?'· demand falling':''}</small></div><div style="text-align:right"><span class="pill p-${x.f.lvl}">${daysTxt(x.f)} left</span><small style="display:block;color:var(--mut)">Order ${x.f.need}</small></div></div>`).join(''):'<p>All medicines have at least two weeks of stock. Nothing to order today.</p>';
+  const al=[];M.forEach(x=>{if(x.m.stock<=x.m.min)al.push([x,'bad','Only '+x.m.stock+' left (reorder at '+x.m.min+')']);if(x.e.lvl=='bad')al.push([x,'bad','Expired '+(-x.e.n)+' days ago']);else if(x.e.lvl=='warn')al.push([x,'warn','Expires in '+x.e.n+' days'])});
+  $('#alerts').innerHTML=al.length?al.slice(0,8).map(([x,l,t])=>`<div class="al-row" data-id="${x.m.id}"><div class="n" style="flex:1;min-width:0"><b>${esc(x.m.name)}</b><small>${t}</small></div><span class="pill p-${l}">${l=='bad'?'Urgent':'Soon'}</span></div>`).join(''):'<p>No alerts. Stock and expiry dates look healthy.</p>';
+  // table
+  const q=$('#q').value.toLowerCase(),c=$('#cat').value,so=$('#sort').value;
+  let rows=M.filter(x=>(c=='All'||x.m.cat==c)&&(x.m.name+x.m.cat+x.m.batch).toLowerCase().includes(q));
+  rows.sort((a,b)=>so=='days'?a.f.days-b.f.days:so=='stock'?a.m.stock-b.m.stock:so=='exp'?a.e.n-b.e.n:a.m.name.localeCompare(b.m.name));
+  $('#rows').innerHTML=rows.length?rows.map(x=>`<tr class="row" data-id="${x.m.id}" tabindex="0"><td><span class="nm">${esc(x.m.name)}</span>${x.m.rx?'<span class="rxb">Rx</span>':''}<small>${x.m.form} · Batch ${esc(x.m.batch)}</small></td><td>${x.m.cat}</td><td><b>${x.m.stock}</b>${x.m.stock<=x.m.min?' <span class="pill p-bad">Low</span>':''}</td><td>${inr(x.m.price)}</td><td><span class="pill p-${x.e.lvl}">${x.m.exp}</span></td><td>${soldToday(x.m)}</td><td><span class="pill p-${x.f.lvl}">${daysTxt(x.f)}</span></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--mut);padding:30px">No medicines match. Clear the search or add a new medicine.</td></tr>';
+  const C=$('#cards');
+  C.innerHTML=rows.length?rows.map((x,i)=>{const m=x.m,f=x.f,p=Math.min(1,m.stock/Math.max(m.min*3,1)),mx=Math.max(...f.d,1);
+    return `<div class="mc l-${f.lvl}${intro?' in':''}" style="animation-delay:${i*45}ms" data-id="${m.id}" tabindex="0"><div class="mc-top"><span class="form">${m.form}</span>${m.rx?'<span class="rxb" style="margin:0">Rx</span>':''}<span class="pill p-${x.e.lvl}" style="margin-left:auto">${x.e.n<0?'Expired':'Exp '+m.exp.slice(0,7)}</span></div><h3>${esc(m.name)}</h3><small>${m.cat}</small><div class="mc-mid"><svg class="ring" viewBox="0 0 64 64"><circle class="t" cx="32" cy="32" r="26"/><circle class="v" cx="32" cy="32" r="26" stroke-dasharray="163.4" stroke-dashoffset="${(163.4*(1-p)).toFixed(1)}" transform="rotate(-90 32 32)"/></svg><div><b>${m.stock}</b><small>in stock</small></div><svg class="sp2" viewBox="0 0 84 36">${f.d.map((v,j)=>`<rect x="${j*6}" y="${36-Math.max(2,v/mx*34)}" width="4" height="${Math.max(2,v/mx*34)}" rx="2" fill="var(--c)" opacity="${(.35+j/22).toFixed(2)}"/>`).join('')}</svg></div><div class="mc-foot"><span class="pill p-${f.lvl}">${daysTxt(f)} left</span><button class="sellb" data-id="${m.id}">Sell</button></div></div>`}).join(''):'<p class="sub" style="padding:30px">No medicines match. Clear the search or add a new medicine.</p>';
+  intro=false;
+  $('.tw').style.display=view=='table'?'':'none';C.style.display=view=='cards'?'':'none';
+  document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.v==view));
+  if(openId)drawer(openId,true);
+}
+
+function spark(d){
+  const mx=Math.max(...d,1),w=400,h=90,bw=w/d.length;
+  return `<svg viewBox="0 0 ${w} ${h+16}" width="100%" role="img" aria-label="Units sold per day, last 14 days">${d.map((v,i)=>`<rect x="${i*bw+3}" y="${h-v/mx*h}" width="${bw-6}" height="${v/mx*h}" rx="3" fill="${i==d.length-1?'var(--rx)':'var(--brand)'}" opacity="${i==d.length-1?1:.55}"/>`).join('')}<text x="0" y="${h+13}" font-size="11" fill="var(--mut)">14 days ago</text><text x="${w}" y="${h+13}" font-size="11" fill="var(--mut)" text-anchor="end">Today</text></svg>`;
+}
+function drawer(id,keep){
+  const m=S.meds.find(x=>x.id==id);if(!m)return;openId=id;
+  const f=forecast(m),e=expInfo(m),pct=Math.min(100,m.stock/Math.max(m.min*3,1)*100);
+  const prevVal=keep&&$('#sq')?$('#sq').value:'';
+  const hist=S.log.filter(l=>l.id==id).slice(0,5);
+  $('#drawer').innerHTML=`<button class="x" id="dx" aria-label="Close">✕</button>
+   <h2>${esc(m.name)}${m.rx?'<span class="rxb">Rx</span>':''}</h2>
+   <div class="sub">${m.cat} · ${m.form} · ${inr(m.price)} per unit · Batch ${esc(m.batch)}</div>
+   <div class="stock"><b class="big${keep?' bump':''}">${m.stock}</b><span class="sub" style="margin-bottom:6px">units remaining</span></div>
+   <div class="bar"><i style="width:${pct}%;background:var(--${f.lvl=='ok'?'ok':f.lvl})"></i></div>
+   <div class="sell"><h3>Record a sale</h3>
+    <div class="qrow"><input id="sq" type="number" min="1" max="${m.stock}" inputmode="numeric" placeholder="0" value="${prevVal}" aria-label="Number sold"><button class="btn" id="sellbtn">Confirm sale</button></div>
+    <div class="chips">${[1,2,5,10].map(n=>`<button class="chip" data-q="${n}">+${n}</button>`).join('')}</div>
+    <div class="sub" id="stot">Enter how many ${m.form.toLowerCase()}s were sold. Stock updates instantly.</div></div>
+   <div class="card ai" style="padding:14px"><h3 style="font-size:16px">AI forecast (${ML.best})</h3>
+    <div class="mini"><div><span>Predicted daily sales</span><b>${f.proj.toFixed(1)}</b></div><div><span>Stock lasts</span><b>${daysTxt(f)}</b></div><div><span>Suggested order</span><b>${f.need} units</b></div><div><span>Demand trend</span><b>${f.trend>.1?'Rising':f.trend<-.1?'Falling':'Steady'}</b></div></div>
+    ${spark(f.d)}</div>
+   <div class="mini"><div><span>Expiry</span><b><span class="pill p-${e.lvl}">${m.exp}</span></b></div><div><span>Sold today</span><b>${soldToday(m)} units · ${inr(soldToday(m)*m.price)}</b></div></div>
+   <h3 style="font-size:16px;margin-top:6px">Restock delivery</h3>
+   <div class="qrow" style="margin-top:8px"><input id="rq" type="number" min="1" placeholder="Qty received" style="font-size:16px;border-width:1px;border-color:var(--line)"><button class="btn ghost" id="rbtn">Add stock</button></div>
+   <h3 style="font-size:16px;margin-top:18px">Recent sales</h3>
+   <div class="hist">${hist.length?hist.map(l=>`<div><span>${l.t}</span><b>−${l.q} · ${inr(l.q*m.price)}</b></div>`).join(''):'<p class="sub">No sales recorded in this session yet.</p>'}</div>
+   <div style="margin-top:18px"><button class="btn bad" id="del">Delete medicine</button></div>`;
+  $('#drawer').classList.add('on');$('#scrim').classList.add('on');
+  const sq=$('#sq');
+  const upd=()=>{const q=+sq.value||0;$('#stot').textContent=q?`Bill: ${inr(q*m.price)} · Stock after sale: ${m.stock-q}`:'Enter how many units were sold. Stock updates instantly.'};
+  sq.oninput=upd;upd();
+  document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{sq.value=(+sq.value||0)+ +b.dataset.q;upd()});
+  $('#sellbtn').onclick=()=>sell(id,+sq.value);
+  sq.onkeydown=ev=>{if(ev.key=='Enter')sell(id,+sq.value)};
+  $('#rbtn').onclick=()=>{const q=Math.floor(+$('#rq').value);if(!(q>0))return toast('Enter the quantity received.',1);m.stock+=q;save();render();toast(`Added ${q} units to ${m.name}.`)};
+  $('#del').onclick=()=>{if(confirm('Delete '+m.name+' from inventory?')){S.meds=S.meds.filter(x=>x.id!=id);save();closeD();render();toast('Medicine deleted.')}};
+  $('#dx').onclick=closeD;
+  if(!keep)setTimeout(()=>sq.focus(),260);
+}
+function closeD(){openId=null;$('#drawer').classList.remove('on');$('#scrim').classList.remove('on')}
+function sell(id,q){
+  const m=S.meds.find(x=>x.id==id);q=Math.floor(q);
+  if(!(q>0))return toast('Enter how many units were sold.',1);
+  if(q>m.stock)return toast(`Only ${m.stock} units in stock. Reduce the quantity.`,1);
+  if(expInfo(m).n<0&&!confirm('This batch has expired. Sell anyway?'))return;
+  m.stock-=q;const t=today(),s=m.sales.find(x=>x.d==t);s?s.q+=q:m.sales.push({d:t,q});
+  S.log.unshift({id,q,t:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});S.log=S.log.slice(0,60);
+  save();$('#sq')&&($('#sq').value='');render();
+  toast(`Sold ${q} × ${m.name}. ${m.stock} left.`+(m.stock<=m.min?' Stock is low.':''));
+}
+
+function fill(){const o=CATS.map(c=>`<option>${c}</option>`).join('');$('#cat').innerHTML='<option>All</option>'+o;$('#n_cat').innerHTML=o}
+document.addEventListener('click',e=>{
+  const r=e.target.closest('[data-id]');if(r&&!e.target.closest('.drawer'))drawer(r.dataset.id);
+});
+document.addEventListener('keydown',e=>{if(e.key=='Escape'){closeD();$('#modal').classList.remove('on')}if(e.key=='Enter'&&e.target.classList.contains('row'))drawer(e.target.dataset.id)});
+$('#scrim').onclick=closeD;
+['q','cat','sort'].forEach(i=>$('#'+i).oninput=render);
+$('#add').onclick=()=>$('#modal').classList.add('on');
+$('#n_cancel').onclick=()=>$('#modal').classList.remove('on');
+$('#n_save').onclick=()=>{
+  const name=$('#n_name').value.trim();if(!name)return toast('Enter the medicine name.',1);
+  if(!$('#n_exp').value)return toast('Choose an expiry date.',1);
+  S.meds.push({id:'m'+Date.now(),name,cat:$('#n_cat').value,form:$('#n_form').value,price:+$('#n_price').value||0,stock:Math.max(0,Math.floor(+$('#n_stock').value||0)),min:+$('#n_min').value||0,rx:+$('#n_rx').value,batch:$('#n_batch').value||'—',exp:$('#n_exp').value,sales:[],restocks:[]});
+  save();$('#modal').classList.remove('on');['n_name','n_batch'].forEach(i=>$('#'+i).value='');render();toast('Medicine added.');
+};
+$('#export').onclick=()=>{
+  const rows=[['Name','Category','Form','Stock','Price','Batch','Expiry','Sold today']].concat(S.meds.map(m=>[m.name,m.cat,m.form,m.stock,m.price,m.batch,m.exp,soldToday(m)]));
+  const b=new Blob([rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='stock-'+today()+'.csv';a.click();
+};
+$('#theme').onclick=()=>{const r=document.documentElement,dark=matchMedia('(prefers-color-scheme:dark)').matches;const cur=r.dataset.theme||(dark?'dark':'light');r.dataset.theme=cur=='dark'?'light':'dark'};
+let intro=true,view='cards';const CU={};
+const ic=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+function countUp(){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;document.querySelectorAll('.kpi .big').forEach(el=>{const v=+el.dataset.v,p=+el.dataset.p,k=el.previousElementSibling.textContent,from=CU[k]??0;CU[k]=v;if(from===v)return;const fmt=x=>p?inr(x):Math.round(x),t0=performance.now();(function f(t){const u=Math.min(1,(t-t0)/800),e=1-Math.pow(1-u,3);el.textContent=fmt(from+(v-from)*e);if(u<1)requestAnimationFrame(f)})(t0)})}
+function hero(n,low,rev){const h=new Date().getHours();$('#greet').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', Pharmacist';$('#hsub').textContent=`${n} medicines tracked. ${low?low+' need reordering.':'Stock levels look healthy.'} ${inr(rev)} sold today.`}
+function tick(){const d=new Date();$('#clock').textContent=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});$('#date').textContent=d.toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'})}
+tick();setInterval(tick,20000);
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render()});
+document.addEventListener('pointermove',e=>{const c=e.target.closest&&e.target.closest('.kpi,.mc,.card');if(!c)return;const r=c.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;c.style.setProperty('--mx',x+'px');c.style.setProperty('--my',y+'px');if(c.classList.contains('mc')&&!matchMedia('(pointer:coarse)').matches){c.style.setProperty('--rx',((x/r.width-.5)*7).toFixed(1)+'deg');c.style.setProperty('--ry',((.5-y/r.height)*7).toFixed(1)+'deg')}});
+document.addEventListener('pointerout',e=>{const c=e.target.closest&&e.target.closest('.mc');if(c&&!c.contains(e.relatedTarget)){c.style.setProperty('--rx','0deg');c.style.setProperty('--ry','0deg')}});
+function mlReport(){
+  const d=ML.dataset,M=ML.models,mx=Math.max(...ML.importance.map(x=>x.v)),c=ML.curve,hi=Math.max(...c.actual,...c.pred),W=520,H=130;
+  const line=a=>a.map((v,i)=>(i*W/(a.length-1)).toFixed(1)+','+(H-v/hi*H*.92).toFixed(1)).join(' ');
+  $('#mlcard').innerHTML=`<h2>Machine-learning model report</h2><p>${d.rows.toLocaleString()} daily records, ${d.medicines} medicines, ${d.days} days. Trained on ${d.train.toLocaleString()} rows, tested on the last 90 days (${d.test.toLocaleString()} rows) from ${d.split}. Best model: <b>${ML.best}</b>.</p>
+  <div class="mlg"><div><div style="overflow-x:auto"><table class="mlt"><thead><tr><th>Model</th><th>MAE</th><th>RMSE</th><th>R²</th><th>WAPE</th></tr></thead><tbody>${M.map(m=>`<tr class="${m.name==ML.best?'best':''}"><td>${m.name}</td><td>${m.mae}</td><td>${m.rmse}</td><td>${m.r2}</td><td>${m.wape}%</td></tr>`).join('')}</tbody></table></div>
+  <svg viewBox="0 0 ${W} ${H+16}" width="100%" style="margin-top:14px" role="img" aria-label="Actual versus predicted daily units, test period"><polyline points="${line(c.actual)}" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linejoin="round"/><polyline points="${line(c.pred)}" fill="none" stroke="var(--rx)" stroke-width="2.5" stroke-dasharray="5 4" stroke-linejoin="round"/><text x="0" y="${H+13}" font-size="11" fill="var(--mut)">Actual (solid) vs predicted (dashed), total units per day, last 45 test days</text></svg></div>
+  <div><h3 style="font-size:16px">What drives demand</h3>${ML.importance.map(x=>`<div class="fi"><span>${x.f.replace('_',' ')}</span><div class="bar"><i style="width:${x.v/mx*100}%;background:var(--brand)"></i></div><b>${(x.v*100).toFixed(0)}%</b></div>`).join('')}</div></div>`}
+fill();load();render();mlReport();
+</script>
+</body>
+</html>
